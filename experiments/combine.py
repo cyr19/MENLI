@@ -11,7 +11,9 @@ import pickle
 import torch
 import seaborn as sns
 import pprint
-
+from types import SimpleNamespace
+from summ import SummEval, RealSumm
+import os
 plt.style.use('seaborn-dark')
 
 # MT
@@ -158,7 +160,6 @@ def combine_nli(nli_metric, dataset, adv=True, agg='max', use_article=False, flu
 
                 for k in ['scores', 'scores_in']:
                     # -c
-                    print(c_data.keys())
                     r[direction]['-c'][k] = [-c for c in c_data[k]]
                     # e-n
                     r[direction]['e-n'][k] = [e-n for e,n in zip(e_data[k], n_data[k])]
@@ -209,7 +210,6 @@ def combine_nli(nli_metric, dataset, adv=True, agg='max', use_article=False, flu
                 if level == 'seg' and 'mqm' not in dataset:
                     # e
                     r[direction]['e'] = e_data
-                    #print(e_data['zh-en'].keys())
                     for lp, _ in e_data.items():
                         # -c
                         r[direction]['-c'][lp] = [-c for c in c_data[lp]]
@@ -232,51 +232,16 @@ def combine_nli(nli_metric, dataset, adv=True, agg='max', use_article=False, flu
                             # e-n-2c
                             r[direction]['e-n-2c'][lp][system] = [e - n - 2 * c for e, n, c in
                                                          zip(e_data[lp][system], n_data[lp][system], c_data[lp][system])]
-        else: # sum
-            # tac datasets
-            if 'tac' in dataset:
-                e_data_rh = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_rh_e.pkl", adv=False)
-                e_data_hr = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_hr_e.pkl", adv=False)
-                n_data_rh = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_rh_n.pkl", adv=False)
-                n_data_hr = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_hr_n.pkl", adv=False)
-                c_data_rh = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_rh_c.pkl", adv=False)
-                c_data_hr = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_hr_c.pkl", adv=False)
-
-                r = defaultdict(lambda : defaultdict(lambda : defaultdict(list)))
-                for direction in ['rh', 'hr', 'avg']:
-                    if direction == 'rh':
-                        e_data, n_data, c_data = e_data_rh, n_data_rh, c_data_rh
-                    elif direction == 'hr':
-                        e_data, n_data, c_data = e_data_hr, n_data_hr, c_data_hr
-                    else:
-                        e_data, n_data, c_data = defaultdict(list), defaultdict(list), defaultdict(list)
-                        for topic in e_data_rh.keys():
-                            e_data[topic] = [(s1+s2)/2 for s1, s2 in zip(e_data_rh[topic], e_data_hr[topic])]
-                            n_data[topic] = [(s1+s2)/2 for s1, s2 in zip(n_data_rh[topic], n_data_hr[topic])]
-                            c_data[topic] = [(s1+s2)/2 for s1, s2 in zip(c_data_rh[topic], c_data_hr[topic])]
-                    # e
-                    r[direction]['e'] = e_data
-                    for topic in e_data_rh.keys():
-                        # -c
-                        r[direction]['-c'][topic] = [-c for c in c_data[topic]]
-                        # e-n
-                        r[direction]['e-n'][topic] = [e-n for e, n in zip(e_data[topic], n_data[topic])]
-                        # e-c
-                        r[direction]['e-c'][topic] = [e - c for e, c in zip(e_data[topic], c_data[topic])]
-                        # e-n-2c
-                        r[direction]['e-n-2c'][topic] = [e - n - 2 * c for e, n, c in zip(e_data[topic], n_data[topic], c_data[topic])]
-            elif dataset in ['summ', 'realsumm', 'BAGEL', 'SFHOT']:
+        else:  # sum
+            if dataset in ['summ', 'realsumm']:
                 if dataset == 'realsumm' or use_article:
                     agg = 'None'
-                #if use_article and dataset == 'summ':
-                #    agg = 'mean'
                 e_data_rh = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_rh_e_{agg}{suffix}.pkl", adv=False)
                 e_data_hr = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_hr_e_{agg}{suffix}.pkl", adv=False)
                 n_data_rh = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_rh_n_{agg}{suffix}.pkl", adv=False)
                 n_data_hr = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_hr_n_{agg}{suffix}.pkl", adv=False)
                 c_data_rh = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_rh_c_{agg}{suffix}.pkl", adv=False)
                 c_data_hr = load_metric_scores(f"../results/{dataset}_scores/{nli_metric}_hr_c_{agg}{suffix}.pkl", adv=False)
-                #print(type(e_data_rh))
                 r = defaultdict(lambda: defaultdict(list))
                 for direction in ['rh', 'hr', 'avg']:
                     if direction == 'rh':
@@ -292,6 +257,7 @@ def combine_nli(nli_metric, dataset, adv=True, agg='max', use_article=False, flu
                     r[direction]['e-n'] = [e-n for e, n in zip(e_data, n_data)]
                     r[direction]['e-c'] = [e-c for e, c in zip(e_data, c_data)]
                     r[direction]['e-n-2c'] = [e-n-2*c for e, n, c in zip(e_data, n_data, c_data)]
+
 
             else:
                 raise ValueError('No such dataset.')
@@ -359,6 +325,7 @@ def evaluate(metric_data, dataset, adv=True, ifprint=False):
             level = 'seg' if dataset not in ['wmt20', 'wmt21.news'] else 'sys'
             # for nli metric evaluation r.keys: rh...
             if 'rh' in metric_data.keys():
+                # wmt15-17
                 if dataset not in ['wmt20', 'wmt21.news', 'wmt20_mqm', 'wmt21.news_mqm']:
                     human_data = read_human_scores() if dataset == 'wmt17' else None
                     for direction, d_data in metric_data.items():
@@ -372,6 +339,8 @@ def evaluate(metric_data, dataset, adv=True, ifprint=False):
                             metric_hash = '{}_{}'.format(direction, strategy)
                             if ifprint:
                                 print_pearson(metric_hash, r[direction][strategy], dataset)
+
+                # wmt20-21
                 else:
                     for direction, d_data in metric_data.items():
                         for strategy, s_data in d_data.items():
@@ -379,36 +348,25 @@ def evaluate(metric_data, dataset, adv=True, ifprint=False):
                                 evs = me_data.EvalSet(dataset, lp) if 'mqm' not in dataset else me_data.EvalSet(dataset.split('_mqm')[0], lp)
                                 if level == 'sys':
                                     # system-level
-                                    if 'mqm' not in dataset:
-                                        gold_scores = evs.Scores('sys', 'wmt-z')
-                                    else:
-                                        if lp != 'zh-en':
-                                            continue
-                                        gold_scores = evs.Scores('sys', 'mqm')
+                                    gold_scores = evs.Scores('sys', 'wmt-z')
                                     system_scores = {system: [np.mean(scores)] for system, scores in system_scores.items()}
                                     corr = evs.Correlation(gold_scores, system_scores, list(system_scores.keys()))
                                     r[direction][strategy][lp] = corr.Pearson()[0]
                                 else:
                                     # segment-level
-                                    if 'mqm' not in dataset:
-                                        gold_scores = evs.Scores('seg', 'wmt-raw')
-                                        corr = evs.Correlation(gold_scores, system_scores, list(system_scores.keys()))
-                                        r[direction][strategy][lp] = corr.Kendalllike()[0]
-                                    else:
-                                        if lp != 'zh-en':
-                                            continue
-                                        gold_scores = evs.Scores('seg', 'mqm')
-                                        sys_names = set(gold_scores) - evs.human_sys_names
-                                        corr = evs.Correlation(gold_scores, system_scores, sys_names)
-                                        r[direction][strategy][lp] = corr.Pearson()[0]
-
+                                    if lp != 'zh-en':
+                                        continue
+                                    gold_scores = evs.Scores('seg', 'mqm')
+                                    sys_names = set(gold_scores) - evs.human_sys_names
+                                    corr = evs.Correlation(gold_scores, system_scores, sys_names)
+                                    r[direction][strategy][lp] = corr.Pearson()[0]
                             metric_hash = '{}_{}'.format(direction, strategy)
                             if ifprint:
                                 print_pearson(metric_hash, r[direction][strategy], dataset)
             else:
                 # for combined metric evaluation r.keys: nli weight
                 human_data = read_human_scores() if dataset == 'wmt17' else None
-                if dataset in ['wmt15','wmt16','wmt17']:
+                if dataset in ['wmt15', 'wmt16', 'wmt17']:
                     for w, lp_data in r.items():
                         for lp, scores in lp_data.items():
                             if dataset == 'wmt17':
@@ -418,7 +376,6 @@ def evaluate(metric_data, dataset, adv=True, ifprint=False):
                             r[w][lp] = pearsonr(scores, human)[0]
                         if ifprint:
                             print_pearson(str(w), r[w], dataset)
-
                 else:
                     # system-level
                     for w, lp_data in metric_data.items():
@@ -426,34 +383,116 @@ def evaluate(metric_data, dataset, adv=True, ifprint=False):
                             evs = me_data.EvalSet(dataset, lp) if 'mqm' not in dataset else me_data.EvalSet(dataset.split('_mqm')[0], lp)
                             if level == 'sys':
                                 # system-level
-                                if 'mqm' not in dataset:
-                                    gold_scores = evs.Scores('sys', 'wmt-z')
-                                    sys_names = list(system_scores.keys())
-                                else:
-                                    if lp != 'zh-en':
-                                        continue
-                                    gold_scores = evs.Scores('sys', 'mqm')
-                                    sys_names = set(gold_scores) - evs.human_sys_names
+                                gold_scores = evs.Scores('sys', 'wmt-z')
                                 system_scores = {system: [np.mean(scores)] for system, scores in system_scores.items()}
                                 corr = evs.Correlation(gold_scores, system_scores, sys_names)
                                 r[w][lp] = corr.Pearson()[0]
                             else:
                                 # segment-level
-                                if 'mqm' not in dataset:
-                                    gold_scores = evs.Scores('seg', 'wmt-raw')
-                                    corr = evs.Correlation(gold_scores, system_scores, list(system_scores.keys()))
-                                    r[w][lp] = corr.KendallLike()[0]
-                                else:
-                                    if lp != 'zh-en':
-                                        continue
-                                    gold_scores = evs.Scores('seg', 'mqm')
-                                    sys_names = set(gold_scores) - evs.human_sys_names
-                                    corr = evs.Correlation(gold_scores, system_scores, sys_names)
-                                    r[w][lp] = corr.Pearson()[0]
+                                if lp != 'zh-en':
+                                    continue
+                                gold_scores = evs.Scores('seg', 'mqm')
+                                sys_names = set(gold_scores) - evs.human_sys_names
+                                corr = evs.Correlation(gold_scores, system_scores, sys_names)
+                                r[w][lp] = corr.Pearson()[0]
                         if ifprint:
                             print_pearson(str(w), r[w], dataset)
+        else:
+            if 'rh' in metric_data.keys():  # for nli metrics
+                if dataset == 'summ':
+                    args = SimpleNamespace(**{'dataset': dataset, 'data_dir': 'datasets', 'aggregate': None})
+                    eval = SummEval(args=args, load_doc=False)
+                    data_df = eval.load_data_summ()
+                    r = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+                    for direction in metric_data.keys():
+                        for strategy in metric_data['rh'].keys():
+                            for c in ['coherence', 'consistency', 'fluency', 'relevance']:
+                                metric_scores = metric_data[direction][strategy]
+                                data_df['metric_scores'] = metric_scores
+                                data = data_df.groupby('system').mean()
+                                r[c][direction][strategy] = kendalltau(list(data['metric_scores']), list(data[f'expert_{c}']))[
+                                    0]
+                            coh, con, flu, rev = r['coherence'][direction][strategy], r['consistency'][direction][strategy], \
+                                                 r['fluency'][direction][strategy], r['relevance'][direction][strategy]
+                            avg = np.mean([coh, con, flu, rev])
+                            if ifprint:
+                                print('metric, dataset, coherence, consistency, fluency, relevance, avg')
+                                print(f"{direction}-{strategy}, {dataset}, {coh}, {con}, {flu}, {rev}, {avg}\n")
+                elif dataset == 'realsumm':
+                    r = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+                    args = SimpleNamespace(**{'dataset': dataset, 'data_dir': 'datasets', 'aggregate': None})
+                    eval = RealSumm(args=args, load_doc=False)
+                    data_df = eval.load_data_realsum()
+                    for direction in metric_data.keys():
+                        for strategy in metric_data['rh'].keys():
+                            metric_scores = metric_data[direction][strategy]
+                            data_df['metric_scores'] = metric_scores
+                            doc_ids = set(data_df['doc_id'])
+                            corr_list = []
+                            for doc_id in doc_ids:
+                                doc_data = data_df[data_df.doc_id == doc_id]
+                                metric_scores = doc_data['metric_scores']
+                                human_scores = doc_data['human_score']
+                                corr, p = pearsonr(metric_scores, human_scores)
+                                if p <= 0.05:
+                                    corr_list.append(corr)
+                            r['summary'][direction][strategy] = np.mean(corr_list)
+                            data = data_df.groupby('system').mean()
+                            corr = pearsonr(data['human_score'], data['metric_scores'])[0]
+                            r['system'][direction][strategy] = corr
+                            if ifprint:
+                                print("direction,strategy,dataset,level,pearson\n")
+                                print(f"{direction},{strategy},{dataset},summary,{r['summary'][direction][strategy]}")
+                                print(f"{direction},{strategy},{dataset},system,{r['system'][direction][strategy]}")
+                else:
+                    print(dataset)
+                    raise ValueError('No such dataset.')
+            else:  # for combined metrics key:w1
+                if dataset == 'summ':
+                    args = SimpleNamespace(**{'dataset': dataset, 'data_dir': 'datasets', 'aggregate': None})
+                    eval = SummEval(args=args, load_doc=False)
+                    data_df = eval.load_data_summ()
+                    r = defaultdict(dict)
+                    for w in metric_data.keys():
+                        metric_scores = metric_data[w]
+                        data_df['metric_scores'] = metric_scores
+                        data = data_df.groupby('system').mean()
+                        for c in ['coherence', 'consistency', 'fluency', 'relevance']:
+                            r[w][c] = kendalltau(list(data['metric_scores']), list(data[f'expert_{c}']))[0]
+                        coh, con, flu, rev = r[w]['coherence'], r[w]['consistency'], \
+                                             r[w]['fluency'], r[w]['relevance']
+                        avg = np.mean([coh, con, flu, rev])
+                        if ifprint:
+                            print('metric, dataset, coherence, consistency, fluency, relevance, avg')
+                            print(f"{w}, {dataset}, {coh}, {con}, {flu}, {rev}, {avg}\n")
+                elif dataset == 'realsumm':
+                    args = SimpleNamespace(**{'dataset': dataset, 'data_dir': 'datasets', 'aggregate': None})
+                    eval = RealSumm(args=args, load_doc=False)
+                    data_df = eval.load_data_realsum()
+                    r = defaultdict(dict)
+                    for w in metric_data.keys():
+                        metric_scores = metric_data[w]
+                        data_df['metric_scores'] = metric_scores
+                        doc_ids = set(data_df['doc_id'])
+                        corr_list = []
+                        for doc_id in doc_ids:
+                            doc_data = data_df[data_df.doc_id == doc_id]
+                            metric_scores = doc_data['metric_scores']
+                            human_scores = doc_data['human_score']
+                            corr, p = pearsonr(metric_scores, human_scores)
+                            if p <= 0.05:
+                                corr_list.append(corr)
+                        r['summary'][w] = np.mean(corr_list)
+                        data = data_df.groupby('system').mean()
+                        corr = pearsonr(data['human_score'], data['metric_scores'])[0]
+                        r['system'][w] = corr
+                        if ifprint:
+                            print("nli_weight,dataset,level,pearson\n")
+                            print(f"{w},{dataset},summary,{np.mean(corr_list)}")
+                            print(f"{w},{dataset},system,{corr}")
 
-
+                else:
+                    raise ValueError('No such dataset.')
     return r
 
 def nomalize_scores(scores, norm='min_max'):
@@ -528,13 +567,9 @@ def combine_nli_and_metric(nli_metric, metric, dataset, method=add_scores, adv=T
             r = defaultdict(dict)
             nli_data = combine_nli(nli_metric, dataset, adv=True)
             nli_data = nli_data[direction][strategy]
-            print(len(nli_data))
-            print(len(nli_data['scores']))
-            print(len(nli_data['scores_in']))
             metric_data = load_metric_scores(f'../results/adv_scores/Rank19_{metric}.pkl', adv=False)
             nli_scores, metric_scores = {}, {}
             nli_scores['scores'], nli_scores['scores_in'] = nomalize_scores((list(nli_data['scores']), list(nli_data['scores_in'])), norm=norm)
-            print(len(nli_scores['scores_in']))
             metric_scores['scores'], metric_scores['scores_in'] = nomalize_scores((metric_data['scores'], metric_data['scores_in']), norm=norm)
 
             for w1 in np.arange(0, 1.1, 0.1):
@@ -543,8 +578,6 @@ def combine_nli_and_metric(nli_metric, metric, dataset, method=add_scores, adv=T
                 w2 = float('%.1f' % w2)
                 combined_scores = method(nli_scores['scores'], metric_scores['scores'], w1, w2)
                 combined_scores_in = method(nli_scores['scores_in'], metric_scores['scores_in'], w1, w2)
-                print(len(nli_scores['scores_in']))
-                print(len(metric_scores['scores_in']))
                 assert len(combined_scores) == len(combined_scores_in), '{}-{}-{}'.format(w1, len(combined_scores), len(combined_scores_in))
                 r[w1] = {'scores': combined_scores, 'scores_in': combined_scores_in}
 
@@ -769,7 +802,6 @@ def plot_trade_off(nli1_data, nli2_data, title, setup, level):
     plt.style.use('seaborn-darkgrid')
     fig = plt.figure(figsize=(8, 5))
     metrics = list(nli1_data['adv'].keys())
-    print(metrics)
     # nli1
     ax1 = fig.add_subplot(1, 2, 1)
     for i, metric in enumerate(metrics):
@@ -872,7 +904,7 @@ def get_matrix(nli, dataset, adv=True, agg='max', use_article=False):
                     if dataset != 'Rank19':
                         aa[i][j] = np.mean([v * 100 for _, v in acc_dict[directions[i]][strategies[j]].items()])
                     else:
-                        aa[i][j] = acc_dict[directions[i]][strategies[j]]
+                        aa[i][j] = acc_dict[directions[i]][strategies[j]] * 100
         matrix = aa
         s = f"\n{nli} -- {dataset} -- {agg} -- {use_article}\n"
         for i in range(len(aa)):
@@ -960,7 +992,6 @@ def get_all_matrices(task = 'mt'):
                     continue
                 for m in metrics:
                         matrix, _, _ = get_matrix(m, dataset, adv=True, use_article=use_article)
-                        print(f"{dataset} - {m}\n{matrix}")
                         matrix_dict[use_article]['adv'].append(matrix)
             # sum
             for dataset in datasets_dict_sum['sum']:
@@ -971,16 +1002,11 @@ def get_all_matrices(task = 'mt'):
                                 continue
                             matrix, _, _ = get_matrix(m, dataset, adv=False, use_article=use_article, agg=agg)
                             for k, v in matrix.items():
-                                print(f"{dataset} - {m} - {k}\n{v}")
                                 matrix_dict[use_article]['sum'].append(v)
                     elif dataset == 'realsumm':
                         matrix, _, _ = get_matrix(m, dataset, adv=False, use_article=use_article)
                         for k, v in matrix.items():
-                            print(f"{dataset} - {m} - {k}\n{v}")
                             matrix_dict[use_article]['sum'].append(v)
-
-        print(f"{len(matrix_dict[use_article]['adv'])} adv matrices")
-        print(f"{len(matrix_dict[use_article]['sum'])} sum matrices")
     return matrix_dict
 
 def get_winning_matrices():
@@ -1003,4 +1029,498 @@ def print_wining_matrix(matrices):
     print(r)
     return r
 
+def make_table_sum(direction='avg', strategy='e', agg='max', use_article=False):
+    final = defaultdict(dict)
 
+    # sum
+    for dataset in datasets_dict_sum['sum']+datasets_dict_sum['adv']:
+        if dataset == 'Rank19' and not use_article:
+            continue
+        for i, metric in enumerate(sum_metrics_dict['ref'] if not use_article else sum_metrics_dict['src']):
+            adv = True if dataset in datasets_dict_sum['adv'] else False
+
+            metric_data = combine_nli_and_metric('NLI1Score_monolingual', metric, dataset, adv=adv, agg=agg, use_article=use_article,
+                                                 direction=direction, strategy=strategy)
+            r = evaluate(metric_data, dataset, adv=adv)
+            if 0.0 in r.keys():
+                if dataset in ['summ', 'Rank19']:
+                    final[dataset][metric] = r[0.0]
+                else:
+                    final[dataset][metric] = np.mean(list(r[0.0].values()))
+            else:
+                final[dataset][metric] = {'summary': r['summary'][0.0], 'system': r['system'][0.0]}
+            if i == 0:
+                for nli in nli_dict['ref']:
+                    metric_data = combine_nli(nli, dataset, adv=adv, agg=agg, use_article=use_article)
+                    r = evaluate(metric_data, dataset, adv=adv)
+                    if dataset == 'summ':
+                        final[dataset][nli] = {'coherence': r['coherence'][direction][strategy],
+                                               'consistency': r['consistency'][direction][strategy],
+                                               'fluency': r['fluency'][direction][strategy],
+                                               'relevance': r['relevance'][direction][strategy]}
+                    elif dataset == 'summ_google':
+                        final[dataset][nli] = np.mean(list(r[direction][strategy].values()))
+                    elif dataset == 'realsumm':
+                        final[dataset][nli] = {'summary': r['summary'][direction][strategy], 'system': r['system'][direction][strategy]}
+                    elif dataset == 'Rank19':
+                        final[dataset][nli] = r[direction][strategy]
+                    else:
+                        raise ValueError(f'No such dataset: {dataset}')
+    pprint.pprint(final, width=1)
+    return final
+
+def plot_sum_trade_off(setup = 'ref', con=False):
+    plt.style.use('seaborn-darkgrid')
+
+    nli1, nli2 = defaultdict(dict), defaultdict(dict)
+    if con:
+        path = '../results/improvement_table_data_sum_con.csv'
+    else:
+        path = '../results/improvement_table_data_sum.csv'
+
+    if os.path.exists(path):
+        data = pd.read_csv(path)
+    else:
+        data = None
+    tmp = defaultdict(list)
+
+    if setup == 'ref':
+        # ref sum
+        if con:
+            combined_results = pd.read_csv(f'../results/tables/combined-on-sum-realsumm-ref-avg-e.csv')
+        else:
+            combined_results = pd.read_csv(f'../results/tables/combined-on-sum-realsumm-ref-hr-e-c.csv')
+        for metric in sum_metrics_dict['ref']:
+            metric_data = combined_results[combined_results.metric == metric]
+            nli1[metric]['summary'] = metric_data[(metric_data.level == 'summary') & (metric_data.nli == 'NLI1Score_monolingual')]['litepyramid'].values
+            nli2[metric]['summary'] = metric_data[(metric_data.level == 'summary') & (metric_data.nli == 'NLI2Score_monolingual')]['litepyramid'].values
+            nli1[metric]['system'] = metric_data[(metric_data.level == 'system') & (metric_data.nli == 'NLI1Score_monolingual')]['litepyramid'].values
+            nli2[metric]['system'] = metric_data[(metric_data.level == 'system') & (metric_data.nli == 'NLI2Score_monolingual')]['litepyramid'].values
+
+            for nli in nli_dict['ref']:
+                for level in ['summary', 'system']:
+                    ori = metric_data[(metric_data.level == level) & (metric_data.nli == nli) & (metric_data.nli_weight == 0.0)]['litepyramid']
+                    ori_nli = metric_data[(metric_data.level == level) & (metric_data.nli == nli) & (metric_data.nli_weight == 1.0)]['litepyramid']
+                    assert len(ori) == 1
+                    ori = ori.values[0]
+                    ori_nli = ori_nli.values[0]
+                    for w in np.arange(0.1, 1.0, 0.1):
+                        w = float('%.1f' % w)
+                        current = metric_data[(metric_data.level == level) & (metric_data.nli == nli) & (metric_data.nli_weight == w)]['litepyramid']
+                        assert len(current) == 1
+                        current = current.values[0]
+                        improvement = (current-ori) / abs(ori) * 100
+                        improvement_nli = (current-ori_nli) / abs(ori_nli) * 100
+                        tmp['setup'].append(setup)
+                        tmp['metric'].append(metric)
+                        tmp['nli'].append(nli)
+                        tmp['nli_weight'].append(w)
+                        tmp['dataset'].append('realsumm')
+                        tmp['type'].append(f"sum-{level}")
+                        tmp['improvement'].append(improvement)
+                        tmp['improvement_nli'].append(improvement_nli)
+                        tmp['ori'].append(ori)
+                        tmp['ori_nli'].append(ori_nli)
+                        tmp['current'].append(current)
+
+        if con:
+            combined_results = pd.read_csv(f'../results/tables/combined-on-sum-summ-ref-avg-e.csv')
+        else:
+            combined_results = pd.read_csv(f'../results/tables/combined-on-sum-summ-ref-hr-e-c.csv')
+        for metric in sum_metrics_dict['ref']:
+            metric_data = combined_results[combined_results.metric == metric]
+            nli1[metric]['system-summ'] = metric_data[(metric_data.aggregation == 'mean') & (metric_data.nli == 'NLI1Score_monolingual')]['avg'].values
+            nli2[metric]['system-summ'] = metric_data[(metric_data.aggregation == 'mean') & (metric_data.nli == 'NLI2Score_monolingual')]['avg'].values
+
+            for nli in nli_dict['ref']:
+                for agg in ['max', 'mean']:
+                    ori = metric_data[(metric_data.aggregation == agg) & (metric_data.nli == nli) & (metric_data.nli_weight == 0.0)]['avg']
+                    ori_nli = metric_data[(metric_data.aggregation == agg) & (metric_data.nli == nli) & (metric_data.nli_weight == 1.0)]['avg']
+                    assert len(ori) == 1
+                    ori = ori.values[0]
+                    ori_nli = ori_nli.values[0]
+                    for w in np.arange(0.1, 1.0, 0.1):
+                        w = float('%.1f' % w)
+                        current = metric_data[(metric_data.aggregation == agg) & (metric_data.nli == nli) & (metric_data.nli_weight == w)]['avg']
+                        assert len(current) == 1
+                        current = current.values[0]
+                        improvement = (current-ori) / abs(ori) * 100
+                        improvement_nli = (current-ori_nli) / abs(ori_nli) * 100
+                        tmp['setup'].append(setup)
+                        tmp['metric'].append(metric)
+                        tmp['nli'].append(nli)
+                        tmp['nli_weight'].append(w)
+                        tmp['dataset'].append(f'summeval-{agg}')
+                        tmp['type'].append(f"sum-system")
+                        tmp['improvement'].append(improvement)
+                        tmp['improvement_nli'].append(improvement_nli)
+                        tmp['ori'].append(ori)
+                        tmp['ori_nli'].append(ori_nli)
+                        tmp['current'].append(current)
+
+        # adv
+        if con:
+            combined_results = pd.read_csv(f'../results/tables/combined-on-adv-ref-avg-e.csv')
+        else:
+            combined_results = pd.read_csv(f'../results/tables/combined-on-adv-ref-hr-e-c.csv')
+
+        for metric in sum_metrics_dict['ref']:
+            metric_data = combined_results[combined_results.metric == metric]
+            nli1[metric]['adv'] = metric_data[metric_data.nli == 'NLI1Score_monolingual']['avg'].values
+            nli2[metric]['adv'] = metric_data[metric_data.nli == 'NLI2Score_monolingual']['avg'].values
+
+            for nli in nli_dict['ref']:
+                ori = metric_data[(metric_data.nli == nli) & (metric_data.nli_weight == 0.0)]['avg']
+                ori_nli = metric_data[(metric_data.nli == nli) & (metric_data.nli_weight == 1.0)]['avg']
+                assert len(ori) == 1
+                ori = ori.values[0]
+                ori_nli = ori_nli.values[0]
+                for w in np.arange(0.1, 1.0, 0.1):
+                    w = float('%.1f' % w)
+                    current = metric_data[(metric_data.nli == nli) & (metric_data.nli_weight == w)]['avg']
+                    assert len(current) == 1
+                    current = current.values[0]
+                    improvement = (current-ori) / abs(ori) * 100
+                    improvement_nli = (current-ori_nli) / abs(ori_nli) * 100
+                    tmp['setup'].append(setup)
+                    tmp['metric'].append(metric)
+                    tmp['nli'].append(nli)
+                    tmp['nli_weight'].append(w)
+                    tmp['dataset'].append('summ_google')
+                    tmp['type'].append(f"adv")
+                    tmp['improvement'].append(improvement)
+                    tmp['improvement_nli'].append(improvement_nli)
+                    tmp['ori'].append(ori)
+                    tmp['ori_nli'].append(ori_nli)
+                    tmp['current'].append(current)
+
+        nlis = [nli1, nli2]
+        fig, ax = plt.subplots(1, 3, figsize=(12,4))
+
+        metric_map = {
+            'BARTScore_bart-large-cnn': 'BARTS-P',
+            'BARTScore_bart-large-cnn+para_bi': 'BARTS-F',
+        }
+        for i in range(len(ax)):
+            if i == 0:
+                ax[i].set_ylabel('SummEval-system (Kendall)')
+            elif i == 1:
+                ax[i].set_ylabel('RealSumm-system (Pearson)')
+            else:
+                ax[i].set_ylabel('RealSumm-summary (Pearson)')
+
+            ax[i].set_xlabel('Adv.(acuuracy)')
+
+            for j, metric in enumerate(sum_metrics_dict['ref']):
+                xs = nli1[metric]['adv']
+                if i == 0:
+                    ys_system_summ = nlis[0][metric]['system-summ']
+                elif i == 1:
+                    ys_system_summ = nlis[0][metric]['system']
+                else:
+                    ys_system_summ = nlis[0][metric]['summary']
+
+                if metric in metric_map.keys():
+                    metric = metric_map[metric]
+                else:
+                    metric = metric.split('_')[0]
+                ax[i].plot(xs, ys_system_summ, linestyle='solid', label=metric, alpha=0.8, linewidth=0.8, marker='.', ms=3, zorder=1)
+
+                ax[i].scatter(xs[0], ys_system_summ[0], marker='*', color='r', zorder=2)
+                ax[i].scatter(xs[-1], ys_system_summ[-1], marker='x', color='r', zorder=2)
+
+                if j == len(sum_metrics_dict['ref'])-1:
+                    ax[i].scatter(xs[0], ys_system_summ[0], marker='*', color='r', label='Ori. Metric', zorder=2)
+                    ax[i].scatter(xs[-1], ys_system_summ[-1], marker='x', color='r', label='NLI Metric', zorder=2)
+
+        ax[2].legend()
+        '''
+        if con:
+            plt.savefig('../results/plot/summ-ref-nli1-con.png', dpi=300, bbox_inches='tight')
+        else:
+            plt.savefig('../results/plot/summ-ref-nli1.png', dpi=300, bbox_inches='tight')
+        '''
+        plt.show()
+
+    else:
+        # src sum
+        combined_results = pd.read_csv(f'../results/tables/combined-on-sum-realsumm-src-rh--c.csv')
+        for metric in sum_metrics_dict['src']:
+            metric_data = combined_results[combined_results.metric == metric]
+            nli1[metric]['summary'] = \
+            metric_data[(metric_data.level == 'summary') & (metric_data.nli == 'NLI1Score_monolingual')][
+                'litepyramid'].values
+            nli2[metric]['summary'] = \
+            metric_data[(metric_data.level == 'summary') & (metric_data.nli == 'NLI2Score_monolingual')][
+                'litepyramid'].values
+            nli1[metric]['system'] = \
+            metric_data[(metric_data.level == 'system') & (metric_data.nli == 'NLI1Score_monolingual')][
+                'litepyramid'].values
+            nli2[metric]['system'] = \
+            metric_data[(metric_data.level == 'system') & (metric_data.nli == 'NLI2Score_monolingual')][
+                'litepyramid'].values
+
+            for nli in nli_dict['ref']:
+                for level in ['summary', 'system']:
+                    ori = metric_data[(metric_data.level == level) & (metric_data.nli == nli) & (metric_data.nli_weight == 0.0)]['litepyramid']
+                    ori_nli = metric_data[(metric_data.level == level) & (metric_data.nli == nli) & (metric_data.nli_weight == 1.0)]['litepyramid']
+                    assert len(ori) == 1
+                    ori = ori.values[0]
+                    ori_nli = ori_nli.values[0]
+                    for w in np.arange(0.1, 1.0, 0.1):
+                        w = float('%.1f' % w)
+                        current = metric_data[(metric_data.level == level) & (metric_data.nli == nli) & (metric_data.nli_weight == w)]['litepyramid']
+                        assert len(current) == 1
+                        current = current.values[0]
+                        improvement = (current-ori) / abs(ori) * 100
+                        improvement_nli = (current-ori_nli) / abs(ori_nli) * 100
+                        tmp['setup'].append(setup)
+                        tmp['metric'].append(metric)
+                        tmp['nli'].append(nli)
+                        tmp['nli_weight'].append(w)
+                        tmp['dataset'].append('realsumm')
+                        tmp['type'].append(f"sum-{level}")
+                        tmp['improvement'].append(improvement)
+                        tmp['improvement_nli'].append(improvement_nli)
+                        tmp['ori'].append(ori)
+                        tmp['ori_nli'].append(ori_nli)
+                        tmp['current'].append(current)
+
+        combined_results = pd.read_csv(f'../results/tables/combined-on-sum-summ-src-rh--c.csv')
+        for metric in sum_metrics_dict['src']:
+            metric_data = combined_results[combined_results.metric == metric]
+            nli1[metric]['system-summ'] = \
+            metric_data[(metric_data.nli == 'NLI1Score_monolingual')][
+                'avg'].values
+            nli2[metric]['system-summ'] = \
+            metric_data[(metric_data.nli == 'NLI2Score_monolingual')][
+                'avg'].values
+
+            for nli in nli_dict['ref']:
+                ori = metric_data[(metric_data.nli == nli) & (metric_data.nli_weight == 0.0)]['avg']
+                ori_nli = metric_data[(metric_data.nli == nli) & (metric_data.nli_weight == 1.0)]['avg']
+                assert len(ori) == 1
+                ori = ori.values[0]
+                ori_nli = ori_nli.values[0]
+                for w in np.arange(0.1, 1.0, 0.1):
+                    w = float('%.1f' % w)
+                    current = metric_data[(metric_data.nli == nli) & (metric_data.nli_weight == w)]['avg']
+                    assert len(current) == 1
+                    current = current.values[0]
+                    improvement = (current-ori) / abs(ori) * 100
+                    improvement_nli = (current-ori_nli) / abs(ori_nli) * 100
+                    tmp['setup'].append(setup)
+                    tmp['metric'].append(metric)
+                    tmp['nli'].append(nli)
+                    tmp['nli_weight'].append(w)
+                    tmp['dataset'].append(f'summeval')
+                    tmp['type'].append(f"sum-system")
+                    tmp['improvement'].append(improvement)
+                    tmp['improvement_nli'].append(improvement_nli)
+                    tmp['ori'].append(ori)
+                    tmp['ori_nli'].append(ori_nli)
+                    tmp['current'].append(current)
+
+        # adv
+        combined_results = pd.read_csv(f'../results/tables/combined-on-adv-src-rh--c.csv')
+        for metric in sum_metrics_dict['src']:
+            metric_data = combined_results[(combined_results.metric == metric)]
+            summ_data = metric_data[(metric_data.dataset == 'summ_google') & (metric_data.nli == 'NLI1Score_monolingual')]['avg'].values
+            rank_data = metric_data[(metric_data.dataset == 'Rank19') & (metric_data.nli == 'NLI1Score_monolingual')]['avg'].values
+            nli1[metric]['adv'] = [np.mean([s1, s2]) for s1, s2 in zip(summ_data, rank_data)]
+
+            for nli in nli_dict['ref']:
+                for dataset in ['Rank19', 'summ_google']:
+                    ori = metric_data[(metric_data.dataset == dataset) & (metric_data.nli == nli) & (metric_data.nli_weight == 0.0)]['avg']
+                    ori_nli = metric_data[(metric_data.dataset == dataset) & (metric_data.nli == nli) & (metric_data.nli_weight == 1.0)]['avg']
+                    assert len(ori) == 1
+                    ori = ori.values[0]
+                    ori_nli = ori_nli.values[0]
+                    for w in np.arange(0.1, 1.0, 0.1):
+                        w = float('%.1f' % w)
+                        current = metric_data[(metric_data.dataset == dataset) & (metric_data.nli == nli) & (metric_data.nli_weight == w)]['avg']
+                        assert len(current) == 1
+                        current = current.values[0]
+                        improvement = (current-ori) / abs(ori) * 100
+                        improvement_nli = (current-ori_nli) / abs(ori_nli) * 100
+                        tmp['setup'].append(setup)
+                        tmp['metric'].append(metric)
+                        tmp['nli'].append(nli)
+                        tmp['nli_weight'].append(w)
+                        tmp['dataset'].append(dataset)
+                        tmp['type'].append(f"adv")
+                        tmp['improvement'].append(improvement)
+                        tmp['improvement_nli'].append(improvement_nli)
+                        tmp['ori'].append(ori)
+                        tmp['ori_nli'].append(ori_nli)
+                        tmp['current'].append(current)
+
+        nlis = [nli1, nli2]
+        fig, ax = plt.subplots(1, 3, figsize=(12, 4))
+        metric_map = {
+            'BARTScore_bart-large-cnn': 'BARTS-FN'
+        }
+        for i in range(len(ax)):
+            if i == 0:
+                ax[i].set_ylabel('SummEval-system (Kendall)')
+            elif i == 1:
+                ax[i].set_ylabel('RealSumm-system (Pearson)')
+            else:
+                ax[i].set_ylabel('RealSumm-summary (Pearson)')
+
+            ax[i].set_xlabel('Adv.(acuuracy)')
+
+            for j, metric in enumerate(sum_metrics_dict['src']):
+                xs = nli1[metric]['adv']
+                if i == 0:
+                    ys_system_summ = nlis[0][metric]['system-summ']
+                elif i == 1:
+                    ys_system_summ = nlis[0][metric]['system']
+                else:
+                    ys_system_summ = nlis[0][metric]['summary']
+
+                if metric in metric_map.keys():
+                    metric = metric_map[metric]
+                else:
+                    metric = metric.split('_')[0]
+                ax[i].plot(xs, ys_system_summ, linestyle='solid', label=metric, alpha=0.8, linewidth=0.8, marker='.',
+                           ms=3, zorder=1)
+                ax[i].scatter(xs[0], ys_system_summ[0], marker='*', color='r', zorder=2)
+                ax[i].scatter(xs[-1], ys_system_summ[-1], marker='x', color='r', zorder=2)
+
+                if j == len(sum_metrics_dict['ref']) - 1:
+                    ax[i].scatter(xs[0], ys_system_summ[0], marker='*', color='r', label='Ori. Metric', zorder=2)
+                    ax[i].scatter(xs[-1], ys_system_summ[-1], marker='x', color='r', label='NLI Metric', zorder=2)
+
+        ax[2].legend()
+        #plt.savefig('../results/plot/sum-src-nli1.png', dpi=300, bbox_inches='tight')
+        plt.show()
+
+    '''
+    if data is not None:
+        data = pd.concat([data, pd.DataFrame(tmp)], ignore_index=True)
+        data.drop_duplicates(inplace=True)
+    else:
+        data = pd.DataFrame(tmp)
+        print('new file')
+    if con:
+        data.to_csv('../results/improvement_table_data_sum_con.csv', index=False)
+    else:
+        data.to_csv('../results/improvement_table_data_sum.csv', index=False)
+    '''
+    #print(data)
+
+def plot_sum_confidence(estimator='median', con=False):
+    plt.style.use('seaborn-darkgrid')
+    if estimator == 'median':
+        es = np.median
+    else:
+        es = estimator
+    if con:
+        data = pd.read_csv('../results/improvement_table_data_sum_con.csv')
+    else:
+        data = pd.read_csv('../results/improvement_table_data_sum.csv')
+
+    data['type'] = ['Adv.' if t == 'adv' else 'Sum.' for t in data['type']]
+    plt.figure(figsize=(6, 6))
+    sns.lineplot(data=data, x='nli_weight', y='improvement', hue='type', estimator=es)
+    plt.legend(loc='upper left')
+    plt.ylabel('improvement(%)')
+    '''
+    if con:
+        plt.savefig('../results/plot/confidence_interval_{}_all_sum_con.png'.format(estimator), dpi=300,
+                    bbox_inches='tight')
+    else:
+        plt.savefig('../results/plot/confidence_interval_{}_all_sum.png'.format(estimator), dpi=300,
+                    bbox_inches='tight')
+    '''
+    plt.figure(figsize=(6, 6))
+    sns.lineplot(data=data, x='nli_weight', y='improvement_nli', hue='type', estimator=es, sort=False)
+    plt.legend(loc='upper left')
+    plt.ylabel('improvement(%)')
+    '''
+    if con:
+        plt.savefig('../results/plot/confidence_interval_{}_all_sum_nli_con.png'.format(estimator), dpi=300,
+                    bbox_inches='tight')
+    else:
+        plt.savefig('../results/plot/confidence_interval_{}_all_sum_nli.png'.format(estimator), dpi=300,
+                    bbox_inches='tight')
+    '''
+    plt.show()
+
+def combined_sum(use_article=False):
+    metrics = sum_metrics_dict['ref'] if not use_article else sum_metrics_dict['src']
+
+    for direction in ['rh', 'hr', 'avg']:
+        if use_article and direction != 'rh':
+            continue
+        for strategy in ['e', '-c', 'e-n', 'e-c', 'e-n-2c']:
+            # adv
+            results = defaultdict(list)
+            for dataset in datasets_dict_sum['adv']:
+                for metric in metrics:
+                    for nli in nli_dict['ref']:
+                        if not use_article and dataset == 'Rank19':
+                            continue
+                        metric_data = combine_nli_and_metric(nli, metric, dataset, adv=True, use_article=use_article, direction=direction, strategy=strategy)
+                        r_dict = evaluate(metric_data, dataset, adv=True)
+                        for w in r_dict.keys():
+                            if dataset == 'summ_google':
+                                r = np.mean([v for _, v in r_dict[w].items()])
+                            elif dataset == 'Rank19':
+                                r = r_dict[w]
+                            results['dataset'].append(dataset)
+                            results['metric'].append(metric)
+                            results['nli'].append(nli)
+                            results['nli_weight'].append(w)
+                            results['avg'].append(r)
+
+            data = pd.DataFrame(results)
+            data.to_csv(f"../results/tables/combined-on-adv-{'ref' if not use_article else 'src'}-{direction}-{strategy}.csv", index=False)
+
+            results = defaultdict(list)
+            dataset = 'realsumm'
+            for metric in metrics:
+                for nli in nli_dict['ref']:
+                    metric_data = combine_nli_and_metric(nli, metric, dataset, adv=False, agg='None', use_article=use_article, direction=direction, strategy=strategy)
+                    r_dict = evaluate(metric_data, dataset, adv=False)
+                    for level in ['summary', 'system']:
+                        level_data = r_dict[level]
+                        for w in level_data.keys():
+                            results['dataset'].append(dataset)
+                            results['metric'].append(metric)
+                            results['nli'].append(nli)
+                            results['nli_weight'].append(w)
+                            results['level'].append(level)
+                            results['correlation'].append('pearson')
+                            results['litepyramid'].append(level_data[w])
+            data = pd.DataFrame(results)
+            print(data)
+            data.to_csv(f"../results/tables/combined-on-sum-{dataset}-{'ref' if not use_article else 'src'}-{direction}-{strategy}.csv", index=False)
+
+            results = defaultdict(list)
+            dataset = 'summ'
+            for metric in metrics:
+                for nli in nli_dict['ref']:
+                    aggs = ['max', 'mean'] if not use_article else ['None']
+                    for agg in aggs:
+                        metric_data = combine_nli_and_metric(nli, metric, dataset, adv=False, agg=agg, use_article=use_article, direction=direction, strategy=strategy)
+                        r_dict = evaluate(metric_data, dataset, adv=False)
+
+                        for w in r_dict.keys():
+                            results['dataset'].append(dataset)
+                            results['metric'].append(metric)
+                            results['nli'].append(nli)
+                            results['nli_weight'].append(w)
+                            results['aggregation'].append(agg)
+                            results['level'].append('system')
+                            results['correlation'].append('kendall')
+                            ks = []
+                            for c, k in r_dict[w].items():
+                                results[c].append(k)
+                                ks.append(k)
+                            results['avg'].append(np.mean(ks))
+
+            data = pd.DataFrame(results)
+            print(data)
+            data.to_csv(f"../results/tables/combined-on-sum-{dataset}-{'ref' if not use_article else 'src'}-{direction}-{strategy}.csv", index=False)
