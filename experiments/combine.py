@@ -377,7 +377,6 @@ def evaluate(metric_data, dataset, adv=True, ifprint=False):
                         if ifprint:
                             print_pearson(str(w), r[w], dataset)
                 else:
-                    # system-level
                     for w, lp_data in metric_data.items():
                         for lp, system_scores in lp_data.items():
                             evs = me_data.EvalSet(dataset, lp) if 'mqm' not in dataset else me_data.EvalSet(dataset.split('_mqm')[0], lp)
@@ -550,7 +549,9 @@ def combine_nli_and_metric(nli_metric, metric, dataset, method=add_scores, adv=T
                 nli_scores = nli_data[error]
                 nli_scores['score'], nli_scores['score_adv'] = nomalize_scores((nli_scores['score'], nli_scores['score_adv']), norm=norm)
                 metric_scores['score'], metric_scores['score_adv'] = nomalize_scores((metric_scores['score'], metric_scores['score_adv']), norm=norm)
-
+                if 'Disco' in metric:
+                    metric_scores['score'] = [-s for s in metric_scores['score']]
+                    metric_scores['score_adv'] = [-s for s in metric_scores['score_adv']]
                 for w1 in np.arange(0, 1.1, 0.1):
                     # w1 nli weight; w2 metric weight
                     #w1 = w1
@@ -635,12 +636,13 @@ def combine_nli_and_metric(nli_metric, metric, dataset, method=add_scores, adv=T
                 r = {}
                 nli_scores = nomalize_scores(nli_data, norm=norm)
                 metric_scores = nomalize_scores(metric_data, norm=norm)
+                if 'Disco' in metric:
+                    metric_scores = [-s for s in metric_scores]
                 assert len(nli_scores) == len(metric_scores)
                 for w1 in np.arange(0, 1.1, 0.1):
                     w1 = float('%.1f' % w1)
                     w2 = float('%.1f' % (1 - w1))
-                    if 'Disco' in metric:
-                        metric_scores = [-s for s in metric_scores]
+
                     combined_scores = method(nli_scores, metric_scores, w1, w2)
                     r[w1] = combined_scores
 
