@@ -116,7 +116,7 @@ the bugs of incorrect use of remapping matrices for part of the language pairs.
 * NLI metrics are with formula e from direction ref/src<-->hyp.
 
 
-####Segment-level evaluation:
+#### Segment-level evaluation:
 
 | Metric | WMT15 | WMT16 | WMT17 | WMT20 | WMT21 | AVG |
 | ---  |  --- | --- |  --- |  --- |  --- |  --- |
@@ -150,7 +150,7 @@ the bugs of incorrect use of remapping matrices for part of the language pairs.
 
 
 
-####System-level evaluation:
+#### System-level evaluation:
 
 | Metric | WMT20 | WMT21 | AVG | 
 | ---  |   --- |  --- |  --- |
@@ -180,13 +180,12 @@ the bugs of incorrect use of remapping matrices for part of the language pairs.
 | XNLI-R | 0.585 | 0.084 | 0.335 |  
 | XNLI-D | 0.726 | 0.437 | 0.581 | 
 
-####Adversarial evaluation:
+#### Adversarial evaluation:
 
 The results can be found in [experiment.ipynb](experiments.ipynb).
 
 
 ### Summarization
-
 
 * Reference-based evaluation:
   * NLI metrics are with formula e-c from direction hyp-->ref
