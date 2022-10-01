@@ -60,7 +60,7 @@ Note that the datasets we used now are different from that for the Arxiv version
 
 ### About the evaluation scripts:
 #### Machine Translation
-We used wmt.py for WMT15-17 and wmt_sys.py for WMT20-21. 
+We used [wmt.py](wmt.py) for WMT15-17 and [wmt_sys.py](wmt_sys.py) for WMT20-21. 
 
 To run metrics on WMT15-17 (segment-level):
 ```angular2html

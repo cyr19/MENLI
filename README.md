@@ -52,6 +52,7 @@ def scoring(scorer, refs, hyps, sources):
 ```
 
 
+Contact person: Yanran Chen (yanran.chen@stud.tu-darmstadt.de)
 
 
 
