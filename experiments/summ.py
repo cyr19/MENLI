@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
-from scorer_utils import init_scorer, scoring
+from metrics.scorer_utils import init_scorer, scoring
 from collections import defaultdict
-from scipy.stats import pearsonr, kendalltau
+from scipy.stats import pearsonr, kendalltau, spearmanr
 import os
 import pickle
-from REALSumm.scoring.utils import get_sents_from_tags
+from mosestokenizer import *
 import json
+from REALSumm.scoring.utils import get_sents_from_tags
 
 def store_scores(scores_dict, metric_name):
     output_dir = os.path.join(args.output_dir, f'{args.dataset}_scores')
@@ -23,6 +24,11 @@ class RealSumm:
         self.data_path = data_path
         self.load_doc = load_doc
         self.data = self.load_data_realsum()
+        self.detokenizer = MosesDetokenizer('en')
+
+    def evaluate(self):
+        self.compute_metric_scores()
+        self.correlate_with_human_scores()
 
     def load_data_realsum(self):
         data = defaultdict(list)
@@ -54,12 +60,15 @@ class RealSumm:
         #data_df.to_csv('datasets/realsum_processed.csv', encoding='utf-8', index=False)
         return data_df
 
+    def detokenize(self, text: str):
+        words = text.split(" ")
+        return self.detokenizer(words)
+
     def compute_metric_scores(self):
-        results = defaultdict(list) if 'NLI' in self.args.metric else []
+        results = defaultdict(list) if 'NLI' in self.args.metric and 'MENLI' not in args.metric else []
         refs = list(self.data['ref'])
         hyps = list(self.data['hyp'])
         srcs = list(self.data['doc']) if self.args.use_article else []
-
         # compute scores on the whole dataset
         scores = scoring(scorer=self.scorer, args=self.args, refs=refs, hyps=hyps, sources=srcs)
         assert len(scores) == len(self.data) or len(scores[0]) == len(self.data)
@@ -71,7 +80,7 @@ class RealSumm:
             results['n'] = scores[1]
             results['c'] = scores[0]
 
-        if 'NLI' not in self.args.metric:
+        if 'NLI' not in self.args.metric or 'MENLI' in args.metric:
             self.data['metric_scores'] = results
         else:
             self.data['metric_scores_e'] = results['e']
@@ -108,14 +117,19 @@ class RealSumm:
             corr_list = []
             suffix = '' if len(col.split('_')) == 2 else '_' + col[-1]
             metric_name = self.args.metric + '_' + metric_hash + suffix
+
             for doc_id in doc_ids:
                 doc_data = self.data[self.data.doc_id == doc_id]
                 metric_scores = doc_data[col]
                 human_scores = doc_data['human_score']
+
                 corr, p = pearsonr(metric_scores, human_scores)
                 if p <= 0.05:
                     corr_list.append(corr)
+
+            print(f"{(len(doc_ids) - len(corr_list))/float(len(doc_ids))} values ignored.")
             self.print_and_save(np.mean(corr_list), metric_name, 'summary', save=save)
+
 
         print('\ncomputing system-level correlation...')
         data = self.data.groupby('system').mean()
@@ -146,10 +160,13 @@ class SummEval:
         self.correlate_with_human_scores()
 
     def find_source_document(self, doc_id):
-        if 'cnn-test' in doc_id:
-            data_dir = os.path.join(self.args.data_dir, 'cnndm/cnn/stories')
-        else:
-            data_dir = os.path.join(self.args.data_dir, 'cnndm/dailymail/stories')
+        try:
+            if 'cnn-test' in doc_id:
+                data_dir = os.path.join(self.args.data_dir, 'cnndm/cnn/cnn/stories')
+            else:
+                data_dir = os.path.join(self.args.data_dir, 'cnndm/dailymail/dailymail/stories')
+        except:
+            raise FileNotFoundError('You need to manually download cnndm datasets from https://cs.nyu.edu/~kcho/DMQA/.')
         path = os.path.join(data_dir, doc_id.split('-')[-1]+'.story')
         with open(path, 'r') as f:
             doc = f.read()
@@ -182,7 +199,7 @@ class SummEval:
         return data
 
     def compute_metric_scores(self, aggregate=np.mean):
-        results = defaultdict(list) if 'NLI' in self.args.metric else []
+        results = defaultdict(list) if 'NLI' in self.args.metric and 'MENLI' not in args.metric else []
 
         hyps, refs = [], []
         for h, rs in zip(self.data['hyp'], self.data['refs']):
@@ -212,7 +229,7 @@ class SummEval:
                 results['n'] = [aggregate(scores[1][i * 11: i * 11 + 11]) for i in range(int(len(scores[0]) / 11))]
                 results['c'] = [aggregate(scores[0][i * 11: i * 11 + 11]) for i in range(int(len(scores[0]) / 11))]
 
-        if 'NLI' not in self.args.metric:
+        if 'NLI' not in self.args.metric or 'MENLI' in args.metric:
             self.data['metric_scores'] = results
         else:
             self.data['metric_scores_e'] = results['e']
@@ -267,21 +284,31 @@ class SummEval:
                     corr_dict[anno]['kendall'][c] = kendalltau(human_scores, metric_scores)[0]
             self.print_and_save(corr_dict, metric_name)
 
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     # all
     parser.add_argument('--metric', type=str, default='None')
     parser.add_argument('--model', type=str, default='None')
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--data_dir', type=str, default='datasets/')
     parser.add_argument('--dataset', type=str, default='summ')
     parser.add_argument('--output_dir', type=str, default='../results/')
     parser.add_argument('--aggregate', type=str)
-    parser.add_argument('--not_store_scores', action='store_true')
-    parser.add_argument('--cross_lingual', action='store_true')
-    parser.add_argument('--store_examples', action='store_true')
+    parser.add_argument('--not_store_scores', action='store_false')
+    parser.add_argument('--use_article', action='store_true')
+
+    # BARTScore
+    parser.add_argument('--bidirection', action='store_true')
+
+    # NLI1Score, NLI2Score,
+    parser.add_argument('--checkpoint', type=int, default=0)
+
+    # MENLI
+    parser.add_argument('--nli_weight', type=float, default=1.0)
+    parser.add_argument('--combine_with', type=str, default='None')
 
     args = parser.parse_args()
     params = vars(args)
