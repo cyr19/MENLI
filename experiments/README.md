@@ -53,7 +53,7 @@ The datasets' names there are different from that in our paper:
 
 [``paws_back_google``](datasets/adv_datasets/paws_back_google) = PAWS<sub>back</sub>
 
-[``paws_ori_google``](datasets/adv_datasets/paws_back_google) = PAWS<sub>ori</sub>
+[``paws_ori_google``](datasets/adv_datasets/paws_ori_google) = PAWS<sub>ori</sub>
 
 [``xpaws/x``](datasets/adv_datasets/xpaws) = XPAWS<sub>x</sub>
 
