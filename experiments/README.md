@@ -1,8 +1,10 @@
 # Experiments
+This folder contains the code and data for the experiments conducted. 
+To reproduce the figures and tables in the paper, please run the corresponding .py file. 
+Before that, you need to unzip the metric scores from [here](../results/scores.zip), 
+or you can run the evaluation scripts in this folder to get the scores.
 
-This folder contains the code and data for experiments such as the evaluation scripts used in this work.
-
-## About the metric implementation:
+## Metric implementation:
 In this work, we experimented with [MoverScore](https://arxiv.org/abs/1909.02622), [BERTScore](https://arxiv.org/abs/1904.09675), 
 [BARTScore](https://arxiv.org/abs/2106.11520), [SentSim](https://aclanthology.org/2021.naacl-main.252/), 
 [XMoverScore](https://aclanthology.org/2020.acl-main.151/), [COMET](https://arxiv.org/abs/2009.09025) and 
@@ -26,27 +28,42 @@ km-en in WMT20). We used its version reported in the original paper that leverag
 * For [COMET](https://github.com/Unbabel/COMET), [BLEURT](https://github.com/google-research/bleurt), [DiscoScore](https://github.com/aiphes/discoscore)
 and [BERTScore](https://github.com/Tiiiger/bert_score), we used their original implementation.
 * NLI1Score and NLI2Score are denoted as (X)NLI-R and (X)NLI-D in our paper, respectively; 
-they output the three probability distribution scores in oder of [c, n, e] at one time.
+they output the three probability distribution scores in oder of [c, n, e] together.
 
 The details of the settings and checkpoints used for those metrics can be found in [metrics/scorer_utils.py](metrics/scorer_utils.py). 
-Generally, we used the current recommended or default checkpoints (May 2022). So COMET and BLEURT
+Generally, we used the currently recommended or default checkpoints (May 2022).
+<!--
+So COMET and BLEURT
 dominating on MT in our evaluation is with no doubt, since most of the used datasets are just 
-their training sets.
+their training sets. 
+-->
 
-## Evaluation
-### About the datasets:
+
+## Datasets:
 The evaluation data is located in folder [datasets](datasets).
 We uploaded the MT, summarization and adversarial datasets used in this work, except for WMT20-21,
 as they are
-bundled in the library [mt_metrics_eval](https://github.com/google-research/mt-metrics-eval),
-which we used for all evaluation on WMT20-21 (version v2).
+bundled in the library [mt_metrics_eval](https://github.com/google-research/mt-metrics-eval)  (version v2),
+which we used for all evaluation on WMT20-21.
 
 
 For each of our generated adversarial datasets, we released a single data.csv file 
 with columns [error,id,source,ref,r,hyp_para,hyp_adv_based,hyp_adv_free] (see folder [datasets/adv_datasets](datasets/adv_datasets)). 
+The datasets' names there are different from that in our paper:
+
+[``paws_back_google``](datasets/adv_datasets/paws_back_google) = PAWS<sub>back</sub>
+
+[``paws_ori_google``](datasets/adv_datasets/paws_back_google) = PAWS<sub>ori</sub>
+
+[``xpaws/x``](datasets/adv_datasets/xpaws) = XPAWS<sub>x</sub>
+
+[``wmt20_google/de``](datasets/adv_datasets/xpaws) = WMT20<sub>de</sub>
+
+[``summ_google``](datasets/adv_datasets/xpaws) = SE<sub>adv</sub>
+
 
 Note that the datasets we used now are different from that for the Arxiv version
-(we will publish the revised paper later):
+(we will publish the revised paper soon):
 
 * The fluency-related phenomena were added into the adversarial datasets after the Arxiv version.
 * xpaws/ja was recreated after the Arxiv version, since it accidentally contained wrong data in another language.
@@ -58,8 +75,11 @@ Note that the datasets we used now are different from that for the Arxiv version
   suites based on the original PAWS are more difficult to the metrics, which has then 
   been confirmed in our evaluation.
 
-### About the evaluation scripts:
-#### Machine Translation
+## Evaluation scripts:
+To obtain comparable results with Table 8 and 9, you can use the following evaluation scripts.
+
+
+### Machine Translation
 We used [wmt.py](wmt.py) for WMT15-17 and [wmt_sys.py](wmt_sys.py) for WMT20-21. 
 
 To run metrics on WMT15-17 (segment-level):
@@ -85,24 +105,26 @@ name and the checkpoint index like:
 ```
 Note: 
 NLI1/2Score doesn't support the selection of the pooling strategy, it always outputs c, n, e
-for one direction. To compute the scores for direction hyp->ref or hyp->src, you could use
+from one direction. To compute the scores for direction hyp->ref or hyp->src, you could specify
 `--direction hr`. To directly use the NLI metrics with selections of pooling strategy and combination with
 other metrics, you may consider [MENLI.py](../MENLI.py). 
 
-#### Summarization
-We used [summ.py](summ.py) to evaluate metrics on [SummEval]() and [RealSumm]() datasets:
+### Summarization
+We used [summ.py](summ.py) for [SummEval](datasets/model_annotations.aligned.scored.jsonl) and [RealSumm](datasets/REALSumm) datasets:
 ```angular2html
 python summ.py --dataset summ --metric DiscoScore --aggregate mean
 python summ.py --dataset realsumm --metric SUPERT --use_article
 ```
 
-#### Adversarial evaluation
+### Adversarial evaluation
 We used [adv_test.py](adv_test.py) to evaluate the metrics on our adversarial datasets.
 ```angular2html
 python adv_test.py --dataset paws_back_google --metric MoverScore
 python adv_test.py --dataset xpaws/de --metric SentSim_new --cross_lingual
 python adv_test.py --dataset summ_google --metric SUPERT --use_article
 ```
+
+<div style="display:none">
 
 ## Evaluation Results
 
@@ -230,8 +252,5 @@ download the stored metric scores from
 [here](https://drive.google.com/file/d/11ucw-Rgyj5G8TJ1KxNowAfnQjCnyKtv2/view?usp=sharing) 
 and unzip it to results/ folder (Arxiv version).
 
-
-
-
-
+</div>
 
