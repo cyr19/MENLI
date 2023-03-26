@@ -1,16 +1,19 @@
-# MENLI 
+#  <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/fitness-icon-robustness-151745156.jpg"  width="4%"/> MENLI
 
 This repository contains the code and data for our paper: [MENLI: Robust Evaluation Metrics from Natural Language Inference](https://arxiv.org/abs/2208.07316).
 
-<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/figure3.png" width="50%" height="40%"/>
+<div align="center">
+<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/figure3.png" width="40%"/>
+</div>
 
 > **Abstract**: 
 > Recently proposed BERT-based evaluation metrics for text generation perform well on standard benchmarks but are vulnerable to adversarial attacks, e.g., relating to information correctness. We argue that this stems (in part) from the fact that they are models of semantic similarity. In contrast, we develop evaluation metrics based on Natural Language Inference (NLI), which we deem a more appropriate modeling. We design a preference-based adversarial attack framework and show that our NLI based metrics are much more robust to the attacks than the recent BERT-based metrics. On standard benchmarks, our NLI based metrics outperform existing summarization metrics, but perform below SOTA MT metrics. However, when combining existing metrics with our NLI metrics, we obtain both higher adversarial robustness (15%-30%) and higher quality metrics as measured on standard benchmarks (+5% to 30%).
+"
 
 
-## MENLI Benchmark
+## 🚀 MENLI Benchmark
 
- [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
+We released the [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
 more details about how to run metrics on them.
 
 Each adversarial dataset has a single data.csv file containing columns:
@@ -31,7 +34,7 @@ the document "xxxx" and its first reference summary in SummEval dataset.
 For **reference-based** metrics, we expect *m(ref,cand<sub>para</sub>) > m(ref,cand<sub>adv</sub>)*, while for **reference-free** metrics, we expect *m(src,ref) > m(src,cand<sub>adv</sub>)*.
 We refer to our paper for more details and the reasons of the setup.
 
-## MENLI Metrics
+## 🚀 MENLI Metrics
 We provide the demo implementation of the [ensemble metrics](MENLI.py), which is, however, still imperfect.
 ### Example of Usage 
 
@@ -78,7 +81,7 @@ def scoring(scorer, refs, hyps, sources):
 ```
 
 
-## Experiments
+## 🚀 Experiments
 To reproduce the experiments conducted in this work, please check the folder [experiments](experiments).
 
 
