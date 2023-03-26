@@ -57,9 +57,9 @@ The datasets' names there are different from that in our paper:
 
 [``xpaws/x``](datasets/adv_datasets/xpaws) = XPAWS<sub>x</sub>
 
-[``wmt20_google/de``](datasets/adv_datasets/xpaws) = WMT20<sub>de</sub>
+[``wmt20_google/de``](datasets/adv_datasets/wmt20_google/de) = WMT20<sub>de</sub>
 
-[``summ_google``](datasets/adv_datasets/xpaws) = SE<sub>adv</sub>
+[``summ_google``](datasets/adv_datasets/summ_google) = SE<sub>adv</sub>
 
 
 Note that the datasets we used now are different from that for the Arxiv version
