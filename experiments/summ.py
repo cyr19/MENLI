@@ -7,7 +7,7 @@ import os
 import pickle
 from mosestokenizer import *
 import json
-from REALSumm.scoring.utils import get_sents_from_tags
+from datasets.REALSumm.scoring.utils import get_sents_from_tags
 
 def store_scores(scores_dict, metric_name):
     output_dir = os.path.join(args.output_dir, f'{args.dataset}_scores')
@@ -18,7 +18,7 @@ def store_scores(scores_dict, metric_name):
         pickle.dump(scores_dict, f)
 
 class RealSumm:
-    def __init__(self, data_path='REALSumm/scores_dicts/', scorer=None, args=None, load_doc=True):
+    def __init__(self, data_path='datasets/REALSumm/scores_dicts/', scorer=None, args=None, load_doc=True):
         self.args = args
         self.scorer = scorer
         self.data_path = data_path
