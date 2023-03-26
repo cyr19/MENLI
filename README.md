@@ -1,6 +1,8 @@
-# MENLI
+# MENLI 
 
 This repository contains the code and data for our paper: [MENLI: Robust Evaluation Metrics from Natural Language Inference](https://arxiv.org/abs/2208.07316).
+
+<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/figure3.png" width="50%" height="40%"/>
 
 > **Abstract**: 
 > Recently proposed BERT-based evaluation metrics for text generation perform well on standard benchmarks but are vulnerable to adversarial attacks, e.g., relating to information correctness. We argue that this stems (in part) from the fact that they are models of semantic similarity. In contrast, we develop evaluation metrics based on Natural Language Inference (NLI), which we deem a more appropriate modeling. We design a preference-based adversarial attack framework and show that our NLI based metrics are much more robust to the attacks than the recent BERT-based metrics. On standard benchmarks, our NLI based metrics outperform existing summarization metrics, but perform below SOTA MT metrics. However, when combining existing metrics with our NLI metrics, we obtain both higher adversarial robustness (15%-30%) and higher quality metrics as measured on standard benchmarks (+5% to 30%).
@@ -8,8 +10,10 @@ This repository contains the code and data for our paper: [MENLI: Robust Evaluat
 
 ## MENLI Benchmark
 
-Check the [adversarial datasets](experiments/datasets/adv_datasets) as well as the [evaluation script](experiments/adv_test.py).
-For each adversarial dataset, we release a single data.csv file containing columns:
+ [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
+more details about how to run metrics on them.
+
+Each adversarial dataset has a single data.csv file containing columns:
 
 - `error` the perturbation type like "add" for addition and "num" for number error.
 
