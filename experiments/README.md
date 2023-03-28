@@ -21,7 +21,7 @@ but we add a parameter bidirection to compute the F variant, which takes the ave
 published by the authors of [USCORE](https://arxiv.org/abs/2202.10062),
 with an additional parameter cross_lingual to enable using it in both ref-based and ref-free setting.
 * [xmoverscore](metrics/xmoverscore) contains the [original code](https://github.com/AIPHES/ACL20-Reference-Free-MT-Evaluation)
-with an additional line in score_utils.py (line 158) to allow use it without remapping, as we tested it 
+with an additional line in score_utils.py (line 158) to allow for using it without remapping, as we tested it 
 with some language pairs for which there are no remapping matrices from the authors (e.g., ja-en and 
 km-en in WMT20). We used its version reported in the original paper that leverages the final layer embedding.
 * For SUPERT, we used the implementation from [SummEval](https://github.com/Yale-LILY/SummEval/tree/master/evaluation/summ_eval).
