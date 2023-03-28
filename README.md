@@ -41,7 +41,7 @@ For **reference-based** metrics, we expect *m(ref,cand<sub>para</sub>) > m(ref,c
 <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table10_failure.png" width="70%"/>
 </div>
 
-Check [our paper](https://arxiv.org/abs/2208.07316) for more details and the reasons of the setup!
+Check [our paper](https://arxiv.org/abs/2208.07316) for more details!
 
 
 ## 🚀 MENLI Metrics
