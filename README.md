@@ -1,4 +1,4 @@
-#  <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/fitness-icon-robustness-151745156.jpg"  width="4%"/> MENLI
+#  <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/fitness-icon-robustness-151745156.jpg"  width="6%"/> MENLI
 
 This repository contains the code and data for our paper: [MENLI: Robust Evaluation Metrics from Natural Language Inference](https://arxiv.org/abs/2208.07316).
 
