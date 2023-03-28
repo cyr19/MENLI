@@ -31,8 +31,18 @@ the document "xxxx" and its first reference summary in SummEval dataset.
 - `hyp_adv_based` the perturbed text from `ref` for reference-based setup; denoted as *cand<sub>adv</sub>* in the paper.
 - `hyp_adv_free` the perturbed text from `r` for reference-free setup; denoted as *cand<sub>adv</sub>* in the paper.
 
-For **reference-based** metrics, we expect *m(ref,cand<sub>para</sub>) > m(ref,cand<sub>adv</sub>)*, while for **reference-free** metrics, we expect *m(src,ref) > m(src,cand<sub>adv</sub>)*.
-We refer to our paper for more details and the reasons of the setup.
+Examples of test suites from our benchmark are given below:
+<div align="center">
+<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table2_examples.png" width="70%"/>
+</div>
+
+For **reference-based** metrics, we expect *m(ref,cand<sub>para</sub>) > m(ref,cand<sub>adv</sub>)*, while for **reference-free** metrics, we expect *m(src,ref) > m(src,cand<sub>adv</sub>)*. We have shown that many standard metrics failed on our test suites:
+<div align="center">
+<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table10_failure.png" width="70%"/>
+</div>
+
+Check [our paper](https://arxiv.org/abs/2208.07316) for more details and the reasons of the setup!
+
 
 ## 🚀 MENLI Metrics
 We provide the demo implementation of the [ensemble metrics](MENLI.py), which is, however, still imperfect.
