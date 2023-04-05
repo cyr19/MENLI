@@ -32,6 +32,7 @@ they output the three probability distribution scores in oder of [c, n, e] toget
 
 The details of the settings and checkpoints used for those metrics can be found in [metrics/scorer_utils.py](metrics/scorer_utils.py). 
 Generally, we used the currently recommended or default checkpoints (May 2022).
+You may need to first install all dependencies required by those metrics to run our experiments.
 <!--
 So COMET and BLEURT
 dominating on MT in our evaluation is with no doubt, since most of the used datasets are just 
