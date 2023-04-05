@@ -1,10 +1,11 @@
 import numpy as np
 import torch
 import os
+import metrics
 
 def init_scorer(args):
     if args.metric == 'SentSim_new':
-        from sentsim_new import SentSim
+        from metrics.sentsim_new import SentSim
         scorer = SentSim(use_wmd=args.use_wmd, cross_lingual=args.cross_lingual)
         metric_hash = scorer.hash
     elif args.metric == 'sentBLEU':
@@ -16,25 +17,25 @@ def init_scorer(args):
         scorer = Rouge()
         metric_hash = 'L'
     elif args.metric == 'NLI1Score':
-        from NLI1Score import NLI1Scorer
+        from metrics.NLI1Score import NLI1Scorer
         scorer = NLI1Scorer(model=args.model, direction=args.direction,
                             device=args.device, cross_lingual=args.cross_lingual, checkpoint=args.checkpoint)
         metric_hash = scorer.hash
     elif args.metric == 'NLI2Score':
-        from NLI2Score import NLI2Scorer
+        from metrics.NLI2Score import NLI2Scorer
         scorer = NLI2Scorer(model=args.model, direction=args.direction,
                             device=args.device, cross_lingual=args.cross_lingual, checkpoint=args.checkpoint)
         metric_hash = scorer.hash
     elif args.metric == 'BERTScore':
-        from bert_score.scorer import BERTScorer
+        from metrics.bert_score.scorer import BERTScorer
         scorer = BERTScorer(lang='en', idf=True, nthreads=4)
         metric_hash = scorer.hash
     elif args.metric == 'MoverScore':
-        from moverscore_re import MoverScorer
+        from metrics.moverscore_re import MoverScorer
         scorer = MoverScorer(idf=True, device=args.device, model='bert_mnli')
         metric_hash = scorer.hash
     elif args.metric == 'BARTScore':
-        from bart_score import BARTScorer
+        from metrics.bart_score import BARTScorer
         # checkpoint = 'facebook/bart-large-cnn'
         scorer = BARTScorer(device=args.device, checkpoint='facebook/bart-large-cnn', bidirection=args.bidirection)
         if args.bidirection:
@@ -44,7 +45,7 @@ def init_scorer(args):
             except:
                 raise FileNotFoundError('You need to manually download this checkpoint from https://github.com/neulab/BARTScore')
         metric_hash = 'bart-large-cnn' if not args.bidirection else 'bart-large-cnn+para_bi'
-    elif args.metric == 'BLEURT':
+    elif metrics.args.metric == 'BLEURT':
         print('bluert')
         from bleurt.score import BleurtScorer
         # checkpoint = 'bleurt/BLEURT-20'
@@ -55,12 +56,12 @@ def init_scorer(args):
         metric_hash = 'BLEURT-20'
     elif args.metric == 'XMoverScore':
         print('xmover')
-        from xmoverscore.scorer import XMOVERScorer
+        from metrics.xmoverscore.scorer import XMOVERScorer
         scorer = XMOVERScorer(model_name='bert-base-multilingual-cased', lm_name='gpt2', device=args.device)
         metric_hash = '{}'.format(args.mapping)
     elif args.metric == 'COMET':
         print('comet')
-        from comet import download_model, load_from_checkpoint
+        from metrics.comet import download_model, load_from_checkpoint
         if args.cross_lingual:
             # checkpoint = "wmt21-comet-qe-mqm"
             model_path = download_model('wmt21-comet-qe-mqm', saving_directory='metrics/models/')
@@ -105,6 +106,7 @@ def init_scorer(args):
 # XMoverScore + LM
 def metric_combination(a, b, alpha):
     return alpha[0] * np.array(a) + alpha[1] * np.array(b)
+
 
 def scoring(args, scorer, refs, hyps, sources, p=None, srcl='de'):
     if args.metric == 'BERTScore':
