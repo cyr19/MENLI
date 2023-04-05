@@ -15,37 +15,12 @@ This repository contains the code and data for our paper: [MENLI: Robust Evaluat
 
 We released the [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
 more details about how to run metrics on them.
-
-Each adversarial dataset has a single data.csv file containing columns:
-
-- `error` the perturbation type like "add" for addition and "num" for number error.
-
-- `id` a unique id mapping the test case to its source instance from the original dataset. E.g., "xxxx:0" in [SE<sub>adv</sub>](experiments/datasets/adv_datasets/summ_google/data.csv) means the test case was generated from 
-the document "xxxx" and its first reference summary in SummEval dataset.
-
-- `source` the text in source language in MT or the source document in summarization; denoted as *src* in the paper.
-
-- `ref` the reference translation or summary.
-- `r` the google translate of `source` or the maximally similar reference summary to `source` in SummEval; the anchor text of `hyp_adv_free`.
-- `hyp_para` the paraphrase of `ref`; denoted as *cand<sub>para</sub>* in the paper.
-- `hyp_adv_based` the perturbed text from `ref` for reference-based setup; denoted as *cand<sub>adv</sub>* in the paper.
-- `hyp_adv_free` the perturbed text from `r` for reference-free setup; denoted as *cand<sub>adv</sub>* in the paper.
-
-Examples of test suites from our benchmark are given below:
-<div align="center">
-<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table2_examples.png" width="70%"/>
-</div>
-
-For **reference-based** metrics, we expect *m(ref,cand<sub>para</sub>) > m(ref,cand<sub>adv</sub>)*, while for **reference-free** metrics, we expect *m(src,ref) > m(src,cand<sub>adv</sub>)*. We have shown that many standard metrics failed on our test suites:
 <div align="center">
 <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table10_failure.png" width="70%"/>
 </div>
 
-Check [our paper](https://arxiv.org/abs/2208.07316) for more details!
-
-
 ## 🚀 MENLI Metrics
-We provide the demo implementation of the [ensemble metrics](MENLI.py), which is, however, still imperfect.
+We provide the demo implementation of the [ensemble metrics](MENLI.py); however, the implementation is still imperfect.
 ### Example of Usage 
 
 ```angular2html
@@ -96,14 +71,14 @@ To reproduce the experiments conducted in this work, please check the folder [ex
 
 
 If you use the code or data from this work, please kindly cite us:
-```angular2html
-@misc{chen2022menli,
-      title={MENLI: Robust Evaluation Metrics from Natural Language Inference}, 
-      author={Yanran Chen and Steffen Eger},
-      year={2022},
-      eprint={2208.07316},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+
+```bigquery
+@article{chen2023menli,
+    title = "MENLI: Robust Evaluation Metrics from Natural Language Inference",
+    author = "Yanran Chen and Steffen Eger",
+    journal = "Transactions of the Association for Computational Linguistics",
+    year = "2023",
+    url = "https://arxiv.org/abs/2208.07316"
 }
 ```
 
@@ -111,4 +86,4 @@ If you have any questions, feel free to contact us!
 
 Yanran Chen ([yanran.chen@stud.tu-darmstadt.de](mailto:yanran.chen@stud.tu-darmstadt.de)) and Steffen Eger ([steffen.eger@uni-bielefeld.de](mailto:steffen.eger@uni-bielefeld.de))
 
-Check our [group page](https://nl2g.github.io/) for other ongoing projects!
+Check our group page ([NLLG](https://nl2g.github.io/)) for other ongoing projects!

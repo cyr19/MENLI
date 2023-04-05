@@ -43,37 +43,9 @@ their training sets.
 The evaluation data is located in folder [datasets](datasets).
 We uploaded the MT, summarization and adversarial datasets used in this work, except for WMT20-21,
 as they are
-bundled in the library [mt_metrics_eval](https://github.com/google-research/mt-metrics-eval)  (version v2),
+bundled in the library [mt_metrics_eval](https://github.com/google-research/mt-metrics-eval) (version v2),
 which we used for all evaluation on WMT20-21.
 
-
-For each of our generated adversarial datasets, we released a single data.csv file 
-with columns [error,id,source,ref,r,hyp_para,hyp_adv_based,hyp_adv_free] (see folder [datasets/adv_datasets](datasets/adv_datasets)). 
-The datasets' names there are different from that in our paper:
-
-[``paws_back_google``](datasets/adv_datasets/paws_back_google) = PAWS<sub>back</sub>
-
-[``paws_ori_google``](datasets/adv_datasets/paws_ori_google) = PAWS<sub>ori</sub>
-
-[``xpaws/x``](datasets/adv_datasets/xpaws) = XPAWS<sub>x</sub>
-
-[``wmt20_google/de``](datasets/adv_datasets/wmt20_google/de) = WMT20<sub>de</sub>
-
-[``summ_google``](datasets/adv_datasets/summ_google) = SE<sub>adv</sub>
-
-
-Note that the datasets we used now are different from that for the Arxiv version
-(we will publish the revised paper soon):
-
-* The fluency-related phenomena were added into the adversarial datasets after the Arxiv version.
-* xpaws/ja was recreated after the Arxiv version, since it accidentally contained wrong data in another language.
-* We recreated the paws datasets:
-  * Fixed some broken backtranslations
-  * Kept the test suites almost the same for the two datasets except hyp_para this time. 
-  as the hyp_para from the original PAWS dataset are more distant 
-  from the ref in syntax structure compared to the ones from backtranslation, so we assume that the test 
-  suites based on the original PAWS are more difficult to the metrics, which has then 
-  been confirmed in our evaluation.
 
 ## Evaluation scripts:
 To obtain comparable results with Table 8 and 9, you can use the following evaluation scripts.
