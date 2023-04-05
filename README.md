@@ -70,7 +70,7 @@ def scoring(scorer, refs, hyps, sources):
 To reproduce the experiments conducted in this work, please check the folder [experiments](experiments).
 
 
-If you use the code or data from this work, please kindly cite us:
+If you use the code or data from this work, please use the following citation:
 
 ```bigquery
 @article{chen2023menli,
@@ -78,7 +78,8 @@ If you use the code or data from this work, please kindly cite us:
     author = "Yanran Chen and Steffen Eger",
     journal = "Transactions of the Association for Computational Linguistics",
     year = "2023",
-    url = "https://arxiv.org/abs/2208.07316"
+    url = "https://arxiv.org/abs/2208.07316",
+    note = "accepted"
 }
 ```
 
