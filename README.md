@@ -15,6 +15,8 @@ This repository contains the code and data for our paper: [MENLI: Robust Evaluat
 
 We released the [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
 more details about how to run metrics on them.
+
+**2023-4-11 Update: we uploaded a new version of adversarial datasets for ref-based MT evaluation, which fixes some space and case errors ([more details](experiments/datasets/adv_datasets)).**
 <div align="center">
 <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table10_failure.png" width="70%"/>
 </div>
@@ -70,7 +72,7 @@ def scoring(scorer, refs, hyps, sources):
 To reproduce the experiments conducted in this work, please check the folder [experiments](experiments).
 
 
-If you use the code or data from this work, please kindly cite us:
+If you use the code or data from this work, please use the following citation:
 
 ```bigquery
 @article{chen2023menli,
@@ -78,7 +80,8 @@ If you use the code or data from this work, please kindly cite us:
     author = "Yanran Chen and Steffen Eger",
     journal = "Transactions of the Association for Computational Linguistics",
     year = "2023",
-    url = "https://arxiv.org/abs/2208.07316"
+    url = "https://arxiv.org/abs/2208.07316",
+    note = "accepted"
 }
 ```
 

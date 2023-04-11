@@ -7,7 +7,7 @@ seed = 0
 # run above function to get the following .csv file
 data = pd.read_csv('../results/tables/all_improvement_data_mt.csv')
 
-data['type'] = [f"Adv.({t.split('-')[-1]})" if 'adv' in t else 'MT' for t in data['type']]
+data['type'] = [f"Adv.({t.split('-')[-1]})" if 'adv' in t else 'Standard' for t in data['type']]
 data['type'] = ['Adv.(adequacy)' if t == 'Adv.(fact)' else t for t in data['type']]
 #data['type']
 plt.figure(figsize=(3, 6))
@@ -33,7 +33,7 @@ data = pd.concat([data_src, data_ref], ignore_index=True)
 # run above to get the following .csv file
 data = pd.read_csv('../results/tables/all_improvement_data_sum.csv')
 
-data['type'] = [f"Adv.({t.split('-')[-1]})" if 'adv' in t else 'MT' for t in data['type']]
+data['type'] = [f"Adv.({t.split('-')[-1]})" if 'adv' in t else 'Standard' for t in data['type']]
 data['type'] = ['Adv.(adequacy)' if t == 'Adv.(fact)' else t for t in data['type']]
 plt.figure(figsize=(3, 6))
 sns.lineplot(data=data, x='nli_weight', y='improvement', hue='type', estimator=np.median, seed=seed)

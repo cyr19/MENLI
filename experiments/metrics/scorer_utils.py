@@ -3,8 +3,20 @@ import torch
 import os
 import metrics
 
+
 def init_scorer(args):
-    if args.metric == 'SentSim_new':
+    if args.metric == 'MENLI-R':
+        from metrics.MENLI import MENLI
+        scorer = MENLI(batch_size=args.batch_size, device=args.device, direction=args.direction, formula=args.formula, src=args.use_article, nli_weight=args.nli_weight,
+                      combine_with=args.combine_with, cross_lingual=args.cross_lingual, model='R')
+        metric_hash = scorer.hash
+    elif args.metric == 'MENLI-D':
+        from metrics.MENLI import MENLI
+        scorer = MENLI(batch_size=args.batch_size, device=args.device, direction=args.direction, formula=args.formula,
+                      src=args.use_article, nli_weight=args.nli_weight,
+                      combine_with=args.combine_with, cross_lingual=args.cross_lingual, model='D')
+        metric_hash = scorer.hash
+    elif args.metric == 'SentSim_new':
         from metrics.sentsim_new import SentSim
         scorer = SentSim(use_wmd=args.use_wmd, cross_lingual=args.cross_lingual)
         metric_hash = scorer.hash
@@ -17,12 +29,12 @@ def init_scorer(args):
         scorer = Rouge()
         metric_hash = 'L'
     elif args.metric == 'NLI1Score':
-        from metrics.NLI1Score import NLI1Scorer
+        from NLI1Score import NLI1Scorer
         scorer = NLI1Scorer(model=args.model, direction=args.direction,
                             device=args.device, cross_lingual=args.cross_lingual, checkpoint=args.checkpoint)
         metric_hash = scorer.hash
     elif args.metric == 'NLI2Score':
-        from metrics.NLI2Score import NLI2Scorer
+        from NLI2Score import NLI2Scorer
         scorer = NLI2Scorer(model=args.model, direction=args.direction,
                             device=args.device, cross_lingual=args.cross_lingual, checkpoint=args.checkpoint)
         metric_hash = scorer.hash
@@ -45,7 +57,7 @@ def init_scorer(args):
             except:
                 raise FileNotFoundError('You need to manually download this checkpoint from https://github.com/neulab/BARTScore')
         metric_hash = 'bart-large-cnn' if not args.bidirection else 'bart-large-cnn+para_bi'
-    elif metrics.args.metric == 'BLEURT':
+    elif args.metric == 'BLEURT':
         print('bluert')
         from bleurt.score import BleurtScorer
         # checkpoint = 'bleurt/BLEURT-20'
@@ -61,7 +73,7 @@ def init_scorer(args):
         metric_hash = '{}'.format(args.mapping)
     elif args.metric == 'COMET':
         print('comet')
-        from metrics.comet import download_model, load_from_checkpoint
+        from comet import download_model, load_from_checkpoint
         if args.cross_lingual:
             # checkpoint = "wmt21-comet-qe-mqm"
             model_path = download_model('wmt21-comet-qe-mqm', saving_directory='metrics/models/')
@@ -76,7 +88,7 @@ def init_scorer(args):
     elif args.metric == 'SUPERT':
         print('supert')
         import nltk
-        nltk.download('stopwords', download_dir='/home/ychen/nltk_data')
+        nltk.download('stopwords', download_dir='/homes/ychen/nltk_data')
         from summ_eval.supert_metric import SupertMetric
         scorer = SupertMetric()
         metric_hash = 'default'
@@ -94,7 +106,7 @@ def init_scorer(args):
         metric_hash = 'DS_Focus_NN'
         import nltk
         #nltk.download('punkt', download_dir='/storage/ukp/work/ychen/envs/anaconda3/envs/disco/nltk_data')
-        nltk.download('punkt', download_dir='/home/ychen/nltk_data')
+        nltk.download('punkt', download_dir='/homes/ychen/nltk_data')
 
     else:
         scorer = 'None'
@@ -113,6 +125,13 @@ def scoring(args, scorer, refs, hyps, sources, p=None, srcl='de'):
         if scorer.idf:
             scorer.compute_idf(refs)
         scores = scorer.score(hyps, refs)[2].detach().numpy()  # F1
+        #scores = scorer.score(hyps, refs)[1].detach().numpy()  # F1
+
+    elif "BERTScore" in args.metric:
+        scores = scorer.score(hyps, refs)
+
+    #elif args.metric == 'BERTScore_scibert':
+    #    scores = scorer.score(hyps, refs)[1].detach().numpy() # recall
 
     elif args.metric == 'Rouge':
         hyps = [h if h!='' else ' ' for h in hyps]
@@ -171,7 +190,7 @@ def scoring(args, scorer, refs, hyps, sources, p=None, srcl='de'):
         scores = [score['supert'] for score in results]
 
     elif args.metric == 'DiscoScore':
-        scores = [scorer(ref=[ref.lower()], sys=hyp.lower()) for hyp, ref in zip(hyps, refs)]
+        scores = [-scorer(ref=[ref.lower()], sys=hyp.lower()) for hyp, ref in zip(hyps, refs)]
 
     elif args.metric == 'None':
         print('testing; randomly set scores.')

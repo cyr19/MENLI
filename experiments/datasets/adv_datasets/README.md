@@ -13,7 +13,7 @@ The names of the datasets here are slightly different from that in our paper:
 [``summ_google``](summ_google) = SE<sub>adv</sub>
 
 
-Each adversarial dataset has a single data.csv file containing columns:
+Each adversarial dataset has a single **data.csv** file containing columns:
 
 - `error` the perturbation type like "add" for addition and "num" for number error.
 
@@ -40,3 +40,11 @@ For **reference-based** metrics, we expect *m(ref,cand<sub>para</sub>) > m(ref,c
 
 Check [our paper](https://arxiv.org/abs/2208.07316) for more details!
 
+## 2023-4-11 Update
+We uploaded a **data_fixed_strict.csv** file to each adversarial dataset folder for ref-based MT evaluation, which removes some noise (e.g., case and space errors) in `hyp_para` (column "hyp_para_fixed") and `hyp_adv` (column "hyp_adv_based_fixed").
+
+We tested BERTScore, COMET and NLI-R on them ([results](https://docs.google.com/spreadsheets/d/1ma4ckRx1r-Y-bAuVTUUwLXZ5tlDKe-3GYI-XKrL5G1E/edit?usp=sharing)).
+After fixing the issues, standard metrics' performance drops (BERTScore 65.3% -> 56.2% and COMET 67.4% -> 62.1%), while NLI-R is almost not influenced at all (84.8% -> 84.3%); this is expected,
+as now the overlap between `ref` and `hyp_adv` becomes larger, which challenges the standard metrics even more, especially those matching-based metrics like BERTScore.
+
+We will release the fixed version for ref-free MT and summarization evaluation soon.

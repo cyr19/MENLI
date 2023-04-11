@@ -4,7 +4,7 @@ import transformers
 import os
 import torch
 transformers.logging.set_verbosity_error()
-from metric_utils import init_scorer, scoring
+from .metric_utils import init_scorer, scoring
 import gdown
 
 class MENLI:
