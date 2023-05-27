@@ -72,7 +72,7 @@ def scoring(scorer, refs, hyps, sources):
 To reproduce the experiments conducted in this work, please check the folder [experiments](experiments).
 
 
-If you use the code or data from this work, please use the following citation:
+If you use the code or data from this work, please include the following citation:
 
 ```bigquery
 @article{chen2023menli,
