@@ -1,6 +1,6 @@
 #  <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/fitness-icon-robustness-151745156.jpg"  width="6%"/> MENLI
 
-This repository contains the code and data for our paper: [MENLI: Robust Evaluation Metrics from Natural Language Inference](https://arxiv.org/abs/2208.07316).
+This repository contains the code and data for our TACL paper: [MENLI: Robust Evaluation Metrics from Natural Language Inference](https://arxiv.org/abs/2208.07316).
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/plots/figure3.png" width="40%"/>
@@ -13,7 +13,7 @@ This repository contains the code and data for our paper: [MENLI: Robust Evaluat
 
 ## 🚀 MENLI Benchmark
 
-We released the [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
+We release our [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
 more details about how to run metrics on them.
 
 **2023-4-11 Update: we uploaded a new version of adversarial datasets for ref-based MT evaluation, which fixes some space and case errors ([more details](experiments/datasets/adv_datasets)).**
