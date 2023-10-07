@@ -75,14 +75,20 @@ To reproduce the experiments conducted in this work, please check the folder [ex
 If you use the code or data from this work, please include the following citation:
 
 ```bigquery
-@article{chen2023menli,
-    title = "MENLI: Robust Evaluation Metrics from Natural Language Inference",
-    author = "Yanran Chen and Steffen Eger",
-    journal = "Transactions of the Association for Computational Linguistics",
-    year = "2023",
-    url = "https://arxiv.org/abs/2208.07316",
-    note = "accepted"
+@article{10.1162/tacl_a_00576,
+    author = {Chen, Yanran and Eger, Steffen},
+    title = "{MENLI: Robust Evaluation Metrics from Natural Language Inference}",
+    journal = {Transactions of the Association for Computational Linguistics},
+    volume = {11},
+    pages = {804-825},
+    year = {2023},
+    month = {07},
+    issn = {2307-387X},
+    doi = {10.1162/tacl_a_00576},
+    url = {https://doi.org/10.1162/tacl\_a\_00576},
+    eprint = {https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl\_a\_00576/2143297/tacl\_a\_00576.pdf},
 }
+
 ```
 
 If you have any questions, feel free to contact us!
