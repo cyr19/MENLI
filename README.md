@@ -85,10 +85,7 @@ If you use the code or data from this work, please include the following citatio
     month = {07},
     issn = {2307-387X},
     doi = {10.1162/tacl_a_00576},
-    url = {https://doi.org/10.1162/tacl\_a\_00576},
-    eprint = {https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl\_a\_00576/2143297/tacl\_a\_00576.pdf},
 }
-
 ```
 
 If you have any questions, feel free to contact us!
