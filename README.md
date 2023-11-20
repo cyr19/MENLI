@@ -9,24 +9,29 @@ This repository contains the code and data for our TACL paper: [MENLI: Robust Ev
 > **Abstract**: 
 > Recently proposed BERT-based evaluation metrics for text generation perform well on standard benchmarks but are vulnerable to adversarial attacks, e.g., relating to information correctness. We argue that this stems (in part) from the fact that they are models of semantic similarity. In contrast, we develop evaluation metrics based on Natural Language Inference (NLI), which we deem a more appropriate modeling. We design a preference-based adversarial attack framework and show that our NLI based metrics are much more robust to the attacks than the recent BERT-based metrics. On standard benchmarks, our NLI based metrics outperform existing summarization metrics, but perform below SOTA MT metrics. However, when combining existing metrics with our NLI metrics, we obtain both higher adversarial robustness (15%-30%) and higher quality metrics as measured on standard benchmarks (+5% to 30%).
 
-
-
-## 🚀 MENLI Benchmark
-
-We release our [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
-more details about how to run metrics on them.
-
-**2023-4-11 Update: we uploaded a new version of adversarial datasets for ref-based MT evaluation, which fixes some space and case errors ([more details](experiments/datasets/adv_datasets)).**
-<div align="center">
-<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table10_failure.png" width="70%"/>
-</div>
-
 ## 🚀 MENLI Metrics
+
+**2023-11-09 Update: You can try MENLI with BERTScore-F and MoverScore from pypi now!!**
+```angular2html
+pip install menli
+```
+You can combine arbitrary metrics with NLI systems. Note that you should score the systems to be compared together, as the ensemble involves the min max normalization.
+E.g., for evaluation on WMT datasets, the systems for one language pair should be scored together (see line 100 in [wmt.py](wmt.py)).
+```angular2html
+from menli.MENLI import MENLI
+nli_scorer = MENLI(direction="rh", formula="e", nli_weight=0.3, combine_with="None", model="D")
+nli_scorer.score_nli(self, srcs=srcs, refs=refs, hyps=hyps)
+self.metric_scores = **your metric scores**
+ens_scores = nli_scorer.combine_all()
+```
+
 We provide the demo implementation of the [ensemble metrics](MENLI.py); however, the implementation is still imperfect.
 ### Example of Usage 
 
 ```angular2html
-from MENLI import MENLI
+#from MENLI import MENLI
+from menli.MENLI import MENLI
+
 scorer = MENLI(direction="rh", formula="e", nli_weight=0.2, \
                 combine_with="MoverScore", model="D", cross_lingual=False)
 # refs and hyps in form of list of String
@@ -66,6 +71,18 @@ def scoring(scorer, refs, hyps, sources):
     # Note: the outputs of the metric should be a list.
     return scores
 ```
+
+
+## 🚀 MENLI Benchmark
+
+We release our [adversarial datasets](experiments/datasets/adv_datasets). Please check [here](experiments/) and the [evaluation script](experiments/adv_test.py) for
+more details about how to run metrics on them.
+
+**2023-4-11 Update: we uploaded a new version of adversarial datasets for ref-based MT evaluation, which fixes some space and case errors ([more details](experiments/datasets/adv_datasets)).**
+<div align="center">
+<img src="https://raw.githubusercontent.com/cyr19/MENLI/main/results/tables/table10_failure.png" width="70%"/>
+</div>
+
 
 
 ## 🚀 Experiments

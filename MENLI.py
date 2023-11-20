@@ -16,7 +16,7 @@ class MENLI:
                  formula='e',
                  cross_lingual=False,
                  src=False,
-                 nli_weight=1,
+                 nli_weight=1.0,
                  **metric_conf
                  ):
 

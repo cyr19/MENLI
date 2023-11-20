@@ -143,7 +143,7 @@ if __name__ == '__main__':
         lps = lp_dict[args.year]
 
 
-    from MENLI import MENLI
+    from menli.MENLI import MENLI
     scorer = MENLI(batch_size=args.batch_size, device=args.device, direction=args.direction, formula=args.formula,
                    nli_weight=args.nli_weight, combine_with=args.combine_with, cross_lingual=args.cross_lingual, model=args.model)
     metric_hash = scorer.metric_hash
