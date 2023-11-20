@@ -16,7 +16,7 @@ This repository contains the code and data for our TACL paper: [MENLI: Robust Ev
 pip install menli
 ```
 You can combine arbitrary metrics with NLI systems. Note that you should score the systems to be compared together, as the ensemble involves the min max normalization.
-E.g., for evaluation on WMT datasets, the systems for one language pair should be scored together (see line 100 in [wmt.py](wmt.py)).
+E.g., for evaluation on WMT datasets, the systems for one language pair should be scored together (see line 110 in [wmt.py](wmt.py)).
 ```angular2html
 from menli.MENLI import MENLI
 nli_scorer = MENLI(direction="rh", formula="e", nli_weight=0.3, combine_with="None", model="D")
